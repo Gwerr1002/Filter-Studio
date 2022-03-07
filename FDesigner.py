@@ -4,7 +4,6 @@
 Created on Thu Mar  3 12:28:51 2022
 
 @author: Gerardo Ortíz Montufar
-
 This work is licensed under the Creative Commons Attribution 4.0
 International License. To view a copy of this license, visit
 http://creativecommons.org/licenses/by/4.0/ or send a letter to
@@ -156,8 +155,18 @@ class MainWindow(QtWidgets.QMainWindow, frecResponse):
         else:
             mensaje = "Secciones del Filtro: {}\n".format(len(self.Filtro))
             
-            for sec in self.Filtro:
-                mensaje += "{}\n".format(sec)
+            key = self.ui.Tfiltro.currentText()
+            if key == "Butterworth" or key == "Chebyshev":
+                for sec in self.Filtro:
+                    mensaje += "{}\n".format(sec)
+            elif key == "FIR":
+                mensaje += "["
+                for sec in self.Filtro:
+                    if sec != self.Filtro[-1]:
+                        mensaje += "{}, ".format(sec)
+                    else:
+                        mensaje += "{}".format(sec)
+                mensaje += "]"
             
         self.ui.plainTextEdit.setPlainText(mensaje)
         
@@ -170,22 +179,23 @@ class MainWindow(QtWidgets.QMainWindow, frecResponse):
         key = self.ui.Tfiltro.currentText()
         ax = self.ui.MagCanvas.axes[0]
         ax.clear()
-        ax.semilogx(Response[0], Response[1])
+        #ax.semilogx(Response[0], Response[1])
         if key == "Butterworth" or key == "Chebyshev":
-            ax.axis([2*self.fp*.1,self.fr*10/2,-self.Ar-self.Ar/2,10])
-            ax.set_xlabel("f ($Hz$)")
+            ax.semilogx(Response[0], Response[1])
+            ax.axis([2*self.cutf*.1,self.cutf*10/2,-self.Ar-self.Ar/2,10])
             ax.axvline(self.cutf,linestyle=':',c='r',label='$f_c = ${}'.format(round(self.cutf,2)))
             ax.axvline(self.fr,linestyle=':',c='g',label='$f_r = ${}'.format(round(self.fr,2)))
             ax.axvline(self.fp,linestyle=':',c='c',label='$f_p = ${}'.format(round(self.fp,2)))
             
         elif key == "FIR":
-            wp, wr = self.fp*2*pi/self.fs, self.fr*2*pi/self.fs
-            ax.axis([3*wp*.1/pi,1,-self.Ar-self.Ar/2,10])
-            ax.set_xlabel("'$\omega/\pi$ rad'")
-            ax.axvline(self.cutf/pi,linestyle=':',c='r',label='$w_c = ${}'.format(round(self.cutf,2)))
-            ax.axvline(wr/pi,linestyle=':',c='g',label='$w_r = ${}'.format(round(wr,2)))
-            ax.axvline(wp/pi,linestyle=':',c='c',label='$w_p = ${}'.format(round(wp,2)))
+            fc = self.cutf*self.fs/(2*pi)
+            ax.semilogx(Response[0]*self.fs/(2*pi), Response[1])
+            ax.axis([.3*fc,fc*10/2,-self.Ar-self.Ar/2,10])
+            ax.axvline(fc,linestyle=':',c='r',label='$f_c = ${}'.format(round(fc,2)))
+            ax.axvline(self.fr,linestyle=':',c='g',label='$f_r = ${}'.format(round(self.fr,2)))
+            ax.axvline(self.fp,linestyle=':',c='c',label='$f_p = ${}'.format(round(self.fp,2)))
         
+        ax.set_xlabel("f ($Hz$)")
         ax.axhline(-self.Ap,linestyle=':',c='c',label='$Ap = $ {}'.format(-self.Ap))
         ax.axhline(-self.Ar,linestyle=':',c='g',label='$Ar = $ {}'.format(-self.Ar))
         ax.axhline(-3,linestyle=':',c='r',label='-3 dB')
@@ -199,18 +209,18 @@ class MainWindow(QtWidgets.QMainWindow, frecResponse):
         key = self.ui.Tfiltro.currentText()
         ax = self.ui.PhaseCanvas.axes[0]
         ax.clear()
-        ax.semilogx(Response[0], Response[1]*180/pi)
         if key == "Butterworth" or key == "Chebyshev":
-            ax.axis([2*self.fp*.1,self.fr*10/2,-200,200])
-            ax.set_xlabel("f ($Hz$)")
+            ax.semilogx(Response[0], Response[1]*180/pi)
+            ax.axis([2*self.cutf*.1,self.cutf*10/2,-200,200])
             ax.axvline(self.cutf,linestyle=':',c='r',label='$f_c = ${}'.format(round(self.cutf,2)))
             
         elif key == "FIR":
-            wp = self.fp*2*pi/self.fs
-            ax.axis([3*wp*.1/pi,1,-200,200])
-            ax.set_xlabel("'$\omega/\pi$ rad'")
-            ax.axvline(self.cutf/pi,linestyle=':',c='r',label='$w_c = ${}'.format(round(self.cutf,2)))
+            fc = self.cutf*self.fs/(2*pi)
+            ax.semilogx(Response[0]*self.fs/(2*pi), Response[1]*180/pi)
+            ax.axis([.3*fc,fc*10/2,-200,200])
+            ax.axvline(fc,linestyle=':',c='r',label='$f_c = ${}'.format(round(fc,2)))
         
+        ax.set_xlabel("f ($Hz$)")
         ax.set_ylabel("Phase ($deg$)")
         ax.legend()
         ax.grid()
@@ -232,7 +242,7 @@ class MainWindow(QtWidgets.QMainWindow, frecResponse):
         self.fp = self.ui.fp_slider.value()
         self.fr = self.ui.fr_slider.value()
         self.Generar()
-    
+
 
 if __name__ == "__main__":
     import sys
