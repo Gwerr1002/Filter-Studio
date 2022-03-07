@@ -41,5 +41,5 @@ class frecResponse:
     def FIR(self, h):
         w, H = freqz(h, [1])
         
-        return w/pi, 20*log10(abs(H)), angle(H), H
+        return w, 20*log10(abs(H)), angle(H), H
     
