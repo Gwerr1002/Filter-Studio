@@ -7,5 +7,9 @@ You only have to type python FDesigner.py in your console to use it. HAVE TO MUC
 
 Require:
 -PYQT5
+
 -scipy
+
 -numpy
+
+-matplotlib
